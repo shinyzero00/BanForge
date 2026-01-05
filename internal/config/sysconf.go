@@ -7,13 +7,6 @@ import (
 	"path/filepath"
 )
 
-var Firewalls = map[string]string{
-	"iptables":  "iptables",
-	"nftables":  "nft",
-	"ufw":       "ufw",
-	"firewalld": "firewall-cmd",
-}
-
 var DetectedFirewall string
 
 const (
@@ -51,15 +44,26 @@ func CreateConf() error {
 	return nil
 }
 
-func GetSysConf() error {
-	for name, binary := range Firewalls {
-		if _, err := exec.LookPath(binary); err == nil {
-			DetectedFirewall = name
-			fmt.Printf("found firewall: %s\n", name)
-			confstr := "firewall = \"" + name + "\""
-			os.WriteFile(ConfigDir+"/"+ConfigFile, []byte(confstr), 0644)
+func FindFirewall() error {
+
+	if os.Getegid() != 0 {
+		fmt.Printf("Firewall settings needs sudo privileges\n")
+		os.Exit(1)
+	}
+	firewalls := []string{"iptables", "nft", "firewall-cmd", "ufw"}
+	for _, firewall := range firewalls {
+		_, err := exec.LookPath(firewall)
+		if err == nil {
+			if firewall == "firewall-cmd" {
+				DetectedFirewall = "firewalld"
+			}
+			if firewall == "nft" {
+				DetectedFirewall = "nftables"
+			}
+			DetectedFirewall = firewall
+			fmt.Printf("Detected firewall: %s\n", firewall)
 			return nil
 		}
 	}
-	return fmt.Errorf("no firewall found (checked iptables, nftables, ufw, firewalld) please install once of them")
+	return fmt.Errorf("no firewall found (checked ufw, firewall-cmd, iptables, nft) please install one of them")
 }
