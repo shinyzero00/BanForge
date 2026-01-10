@@ -1,0 +1,21 @@
+name: CI.yml
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Go setup
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.25'
+      - name: Build
+        run: go build -o BanForge /cmd/banforge
