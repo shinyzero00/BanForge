@@ -23,20 +23,40 @@ func (f *Iptables) Ban(ip string) error {
 	if err != nil {
 		return err
 	}
+	err = validateConfigPath(f.config)
+	if err != nil {
+		return err
+	}
 	cmd := exec.Command("sudo", "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		f.logger.Error(err.Error())
+		f.logger.Error("failed to ban IP",
+			"ip", ip,
+			"error", err.Error(),
+			"output", string(output))
 		return err
 	}
-	f.logger.Info("Banning " + ip + " " + string(output))
+	f.logger.Info("IP banned",
+		"ip", ip,
+		"output", string(output))
+
+	err = validateConfigPath(f.config)
+	if err != nil {
+		return err
+	}
+	// #nosec G204 - f.config is validated above via validateConfigPath()
 	cmd = exec.Command("sudo", "iptables-save", "-f", f.config)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		f.logger.Error(err.Error())
+		f.logger.Error("failed to save config",
+			"config_path", f.config,
+			"error", err.Error(),
+			"output", string(output))
 		return err
 	}
-	f.logger.Info("Config saved " + string(output))
+	f.logger.Info("config saved",
+		"config_path", f.config,
+		"output", string(output))
 	return nil
 }
 
@@ -45,19 +65,39 @@ func (f *Iptables) Unban(ip string) error {
 	if err != nil {
 		return err
 	}
+	err = validateConfigPath(f.config)
+	if err != nil {
+		return err
+	}
 	cmd := exec.Command("sudo", "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		f.logger.Error(err.Error())
+		f.logger.Error("failed to unban IP",
+			"ip", ip,
+			"error", err.Error(),
+			"output", string(output))
 		return err
 	}
-	f.logger.Info("Unbanning " + ip + " " + string(output))
+	f.logger.Info("IP unbanned",
+		"ip", ip,
+		"output", string(output))
+
+	err = validateConfigPath(f.config)
+	if err != nil {
+		return err
+	}
+	// #nosec G204 - f.config is validated above via validateConfigPath()
 	cmd = exec.Command("sudo", "iptables-save", "-f", f.config)
 	output, err = cmd.CombinedOutput()
 	if err != nil {
-		f.logger.Error(err.Error())
+		f.logger.Error("failed to save config",
+			"config_path", f.config,
+			"error", err.Error(),
+			"output", string(output))
 		return err
 	}
-	f.logger.Info("Config saved " + string(output))
+	f.logger.Info("config saved",
+		"config_path", f.config,
+		"output", string(output))
 	return nil
 }

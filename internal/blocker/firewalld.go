@@ -1,8 +1,9 @@
 package blocker
 
 import (
-	"github.com/d3m0k1d/BanForge/internal/logger"
 	"os/exec"
+
+	"github.com/d3m0k1d/BanForge/internal/logger"
 )
 
 type Firewalld struct {
@@ -20,7 +21,7 @@ func (f *Firewalld) Ban(ip string) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("sudo", "firewall-cmd", "--zone=drop", "--add-source="+ip, "--permanent")
+	cmd := exec.Command("sudo", "firewall-cmd", "--zone=drop", "--add-source", ip, "--permanent")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		f.logger.Error(err.Error())
@@ -41,7 +42,7 @@ func (f *Firewalld) Unban(ip string) error {
 	if err != nil {
 		return err
 	}
-	cmd := exec.Command("sudo", "firewall-cmd", "--zone=drop", "--remove-source="+ip, "--permanent")
+	cmd := exec.Command("sudo", "firewall-cmd", "--zone=drop", "--remove-source", ip, "--permanent")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		f.logger.Error(err.Error())

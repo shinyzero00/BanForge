@@ -16,3 +16,11 @@ func validateIP(ip string) error {
 
 	return nil
 }
+
+func validateConfigPath(path string) error {
+	if path == "" {
+		return fmt.Errorf("empty path")
+	}
+	return nil
+	// TODO: add more valodation
+}
