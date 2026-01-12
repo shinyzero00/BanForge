@@ -1,6 +1,6 @@
 # BanForge
 
-Log-based IPS system written on Go for Linux based system.
+Log-based IPS system written in Go for Linux based system.
 
 # Table of contents
 1. [Overview](#overview)
