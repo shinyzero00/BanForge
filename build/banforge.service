@@ -1,0 +1,17 @@
+[Unit]
+Description=BanForge - IPS log based system
+After=network-online.target
+Wants=network-online.target
+Documentation=https://github.com/d3m0k1d/BanForge
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/banforge daemon
+User=root
+Group=root
+Restart=always
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=banforge
+[Install]
+WantedBy=multi-user.target
