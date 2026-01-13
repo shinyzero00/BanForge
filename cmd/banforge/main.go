@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/d3m0k1d/BanForge/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +27,16 @@ var initCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		err = os.Mkdir("/etc/banforge", 0750)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		err = config.CreateConf()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		err = config.FindFirewall()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

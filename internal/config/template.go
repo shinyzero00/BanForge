@@ -1,14 +1,15 @@
 package config
 
-const Base_config = `# This is a TOML config file for BanForge it's a simple config file
-# https://github.com/d3m0k1d/BanForge
+const Base_config = `
+# This is a TOML config file for BanForge
+# [https://github.com/d3m0k1d/BanForge](https://github.com/d3m0k1d/BanForge)
 
-# Firewall settings block
 [firewall]
-name = "iptables" # Name one of the support firewall(iptables, nftables, firewalld, ufw)
+name = ""
+config = "/etc/nftables.conf"
 ban_time = 1200
 
-[Service]
+[service]
 name = "nginx"
 log_path = "/var/log/nginx/access.log"
 enabled = true

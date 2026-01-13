@@ -96,7 +96,7 @@ func (n *Nftables) Unban(ip string) error {
 	return nil
 }
 
-func SetupNftables(config string) error {
+func (n *Nftables) Setup(config string) error {
 	err := validateConfigPath(config)
 	if err != nil {
 		return fmt.Errorf("path error: %w", err)

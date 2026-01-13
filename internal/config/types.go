@@ -7,7 +7,12 @@ type Firewall struct {
 }
 
 type Service struct {
-	Name     string `toml:"name"`
-	Log_path string `toml:"log_path"`
-	Enabled  bool   `toml:"enabled"`
+	Name    string `toml:"name"`
+	LogPath string `toml:"log_path"`
+	Enabled bool   `toml:"enabled"`
+}
+
+type Config struct {
+	Firewall Firewall `toml:"firewall"`
+	Service  Service  `toml:"service"`
 }
