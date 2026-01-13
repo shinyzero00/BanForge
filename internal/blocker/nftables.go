@@ -20,23 +20,6 @@ func NewNftables(logger *logger.Logger, config string) *Nftables {
 	}
 }
 
-// Name returns the blocker engine name
-func (n *Nftables) Name() string {
-	return "nftables"
-}
-
-// IsAvailable checks if nftables is available in the system
-func (n *Nftables) IsAvailable() bool {
-	cmd := exec.Command("which", "nft")
-	return cmd.Run() == nil
-}
-
-// Setup initializes nftables with required tables and chains
-func (n *Nftables) Setup() error {
-	return SetupNftables(n.config)
-}
-
-// Ban adds an IP to the banned list
 func (n *Nftables) Ban(ip string) error {
 	err := validateIP(ip)
 	if err != nil {
@@ -68,7 +51,6 @@ func (n *Nftables) Ban(ip string) error {
 	return nil
 }
 
-// Unban removes an IP from the banned list
 func (n *Nftables) Unban(ip string) error {
 	err := validateIP(ip)
 	if err != nil {
@@ -114,45 +96,6 @@ func (n *Nftables) Unban(ip string) error {
 	return nil
 }
 
-// List returns all currently banned IPs
-func (n *Nftables) List() ([]string, error) {
-	cmd := exec.Command("sudo", "nft", "-a", "list", "chain", "inet", "banforge", "banned")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		n.logger.Error("failed to list banned IPs",
-			"error", err.Error(),
-			"output", string(output))
-		return nil, err
-	}
-
-	var bannedIPs []string
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		if strings.Contains(line, "drop") && strings.Contains(line, "saddr") {
-			// Extract IP from line like: ip saddr 10.0.0.1 drop # handle 2
-			parts := strings.Fields(line)
-			for i, part := range parts {
-				if part == "saddr" && i+1 < len(parts) {
-					ip := parts[i+1]
-					if validateIP(ip) == nil {
-						bannedIPs = append(bannedIPs, ip)
-					}
-					break
-				}
-			}
-		}
-	}
-
-	return bannedIPs, nil
-}
-
-// Close performs cleanup operations (placeholder for future use)
-func (n *Nftables) Close() error {
-	// No cleanup needed for nftables
-	n.logger.Info("nftables blocker closed")
-	return nil
-}
-
 func SetupNftables(config string) error {
 	err := validateConfigPath(config)
 	if err != nil {
@@ -175,25 +118,6 @@ func SetupNftables(config string) error {
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			return fmt.Errorf("failed to create input chain: %s", string(output))
-		}
-	}
-
-	cmd = exec.Command("sudo", "nft", "list", "chain", "inet", "banforge", "banned")
-	if err := cmd.Run(); err != nil {
-		cmd = exec.Command("sudo", "nft", "add", "chain", "inet", "banforge", "banned")
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed to create banned chain: %s", string(output))
-		}
-	}
-
-	cmd = exec.Command("sudo", "nft", "-a", "list", "chain", "inet", "banforge", "input")
-	output, err := cmd.CombinedOutput()
-	if err == nil && !strings.Contains(string(output), "jump banned") {
-		cmd = exec.Command("sudo", "nft", "add", "rule", "inet", "banforge", "input", "jump", "banned")
-		output, err = cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("failed to add jump rule: %s", string(output))
 		}
 	}
 
