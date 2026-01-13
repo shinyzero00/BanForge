@@ -1,4 +1,4 @@
-package Judge
+package judge
 
 import (
 	"fmt"
@@ -16,11 +16,12 @@ type Judge struct {
 	rulesByService map[string][]config.Rule
 }
 
-func New(db *storage.DB) *Judge {
+func New(db *storage.DB, b blocker.BlockerEngine) *Judge {
 	return &Judge{
 		db:             db,
 		logger:         logger.New(false),
 		rulesByService: make(map[string][]config.Rule),
+		Blocker:        b,
 	}
 }
 

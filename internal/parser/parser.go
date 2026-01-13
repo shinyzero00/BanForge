@@ -52,6 +52,7 @@ func (s *Scanner) Start() {
 					s.ch <- Event{
 						Data: s.scanner.Text(),
 					}
+					s.logger.Info("Scanner event", "data", s.scanner.Text())
 				} else {
 					if err := s.scanner.Err(); err != nil {
 						s.logger.Error("Scanner error")

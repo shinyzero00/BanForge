@@ -42,6 +42,7 @@ func (p *NginxParser) Parse(eventCh <-chan Event, resultCh chan<- *storage.LogEn
 				Method:   method,
 				IsViewed: false,
 			}
+			p.logger.Info("Parsed nginx log entry", "ip", matches[1], "path", path, "status", status, "method", method)
 		}
 	}()
 }

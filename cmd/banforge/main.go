@@ -3,12 +3,14 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/d3m0k1d/BanForge/internal/blocker"
 	"github.com/d3m0k1d/BanForge/internal/config"
-	_ "github.com/d3m0k1d/BanForge/internal/judge"
+	"github.com/d3m0k1d/BanForge/internal/judge"
 	"github.com/d3m0k1d/BanForge/internal/logger"
 	"github.com/d3m0k1d/BanForge/internal/parser"
-	_ "github.com/d3m0k1d/BanForge/internal/storage"
+	"github.com/d3m0k1d/BanForge/internal/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -25,26 +27,80 @@ var initCmd = &cobra.Command{
 	Short: "Initialize BanForge",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing BanForge...")
-		err := os.Mkdir("/var/log/banforge", 0750)
+
+		if _, err := os.Stat("/var/log/banforge"); err == nil {
+			fmt.Println("/var/log/banforge already exists, skipping...")
+		} else if os.IsNotExist(err) {
+			err := os.Mkdir("/var/log/banforge", 0750)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println("Created /var/log/banforge")
+		} else {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		if _, err := os.Stat("/var/lib/banforge"); err == nil {
+			fmt.Println("/var/lib/banforge already exists, skipping...")
+		} else if os.IsNotExist(err) {
+			err := os.Mkdir("/var/lib/banforge", 0750)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println("Created /var/lib/banforge")
+		} else {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if _, err := os.Stat("/etc/banforge"); err == nil {
+			fmt.Println("/etc/banforge already exists, skipping...")
+		} else if os.IsNotExist(err) {
+			err := os.Mkdir("/etc/banforge", 0750)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Println("Created /etc/banforge")
+		} else {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		err := config.CreateConf()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = os.Mkdir("/etc/banforge", 0750)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		err = config.CreateConf()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+		fmt.Println("Config created")
+
 		err = config.FindFirewall()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		db, err := storage.NewDB()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		err = db.CreateTable()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		defer func() {
+			err = db.Close()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}()
+		fmt.Println("Firewall detected and configured")
+
+		fmt.Println("BanForge initialized successfully!")
 	},
 }
 
@@ -54,23 +110,86 @@ var daemonCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log := logger.New(false)
 		log.Info("Starting BanForge daemon")
-		//db, err := storage.NewDB()
-		//if err != nil {
-		//log.Error("Failed to create database", "error", err)
-		//}
+		db, err := storage.NewDB()
+		if err != nil {
+			log.Error("Failed to create database", "error", err)
+			os.Exit(1)
+		}
+		defer func() {
+			err = db.Close()
+			if err != nil {
+				log.Error("Failed to close database connection", "error", err)
+			}
+		}()
 		cfg, err := config.LoadConfig()
 		if err != nil {
 			log.Error("Failed to load config", "error", err)
+			os.Exit(1)
 		}
-		for service := range cfg.Service {
-			if cfg.Service[service].Enabled && cfg.Service[service].Name != "nginx" {
-				pars, err := parser.NewScanner(cfg.Service[service].LogPath)
-				if err != nil {
-					log.Error("Failed to create parser", "error", err)
+		var b blocker.BlockerEngine
+		fw := cfg.Firewall.Name
+		switch fw {
+		case "ufw":
+			b = blocker.NewUfw(log)
+		case "iptables":
+			b = blocker.NewIptables(log, cfg.Firewall.Config)
+		case "nftables":
+			b = blocker.NewNftables(log, cfg.Firewall.Config)
+		case "firewalld":
+			b = blocker.NewFirewalld(log)
+		default:
+			log.Error("Unknown firewall", "firewall", fw)
+			os.Exit(1)
+		}
+		r, err := config.LoadRuleConfig()
+		if err != nil {
+			log.Error("Failed to load rules", "error", err)
+			os.Exit(1)
+		}
+		j := judge.New(db, b)
+		j.LoadRules(r)
+		go func() {
+			ticker := time.NewTicker(5 * time.Second)
+			defer ticker.Stop()
+			for range ticker.C {
+				if err := j.ProcessUnviewed(); err != nil {
+					log.Error("Failed to process unviewed", "error", err)
 				}
-				go pars.Start()
 			}
+		}()
+
+		for _, svc := range cfg.Service {
+			log.Info("Processing service", "name", svc.Name, "enabled", svc.Enabled, "path", svc.LogPath)
+
+			if !svc.Enabled {
+				log.Info("Service disabled, skipping", "name", svc.Name)
+				continue
+			}
+
+			if svc.Name != "nginx" {
+				log.Info("Only nginx supported, skipping", "name", svc.Name)
+				continue
+			}
+
+			log.Info("Starting parser for service", "name", svc.Name, "path", svc.LogPath)
+
+			pars, err := parser.NewScanner(svc.LogPath)
+			if err != nil {
+				log.Error("Failed to create scanner", "service", svc.Name, "error", err)
+				continue
+			}
+
+			go pars.Start()
+			go func(p *parser.Scanner, serviceName string) {
+				log.Info("Starting nginx parser", "service", serviceName)
+				ng := parser.NewNginxParser()
+				resultCh := make(chan *storage.LogEntry, 100)
+				ng.Parse(p.Events(), resultCh)
+				go storage.Write(db, resultCh)
+			}(pars, svc.Name)
 		}
+
+		select {}
 	},
 }
 
@@ -79,6 +198,7 @@ func Init() {
 }
 
 func Execute() {
+	rootCmd.AddCommand(daemonCmd)
 	rootCmd.AddCommand(initCmd)
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

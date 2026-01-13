@@ -50,6 +50,14 @@ func CreateConf() error {
 	if err != nil {
 		return fmt.Errorf("failed to create rules file: %w", err)
 	}
+	file, err = os.Create("/var/lib/banforge/storage.db")
+	if err != nil {
+		return fmt.Errorf("failed to create database file: %w", err)
+	}
+	err = os.Chmod("/var/lib/banforge/storage.db", 0600)
+	if err != nil {
+		return fmt.Errorf("failed to set permissions: %w", err)
+	}
 	defer func() {
 		err = file.Close()
 		if err != nil {

@@ -9,8 +9,16 @@ name = ""
 config = "/etc/nftables.conf"
 ban_time = 1200
 
-[service]
+[[service]]
 name = "nginx"
 log_path = "/var/log/nginx/access.log"
 enabled = true
+
+[[service]]
+name = "nginx"
+log_path = "/var/log/nginx/access.log"
+enabled = false
+
 `
+
+// TODO: fix types for use 1 or any services"
