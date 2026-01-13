@@ -64,7 +64,10 @@ func (j *Judge) ProcessUnviewed() error {
 					(rule.Path == "" || entry.Path == rule.Path) {
 
 					j.logger.Info(fmt.Sprintf("Rule matched for IP: %s, Service: %s", entry.IP, entry.Service))
-					j.Blocker.Ban(entry.IP)
+					err = j.Blocker.Ban(entry.IP)
+					if err != nil {
+						j.logger.Error(fmt.Sprintf("Failed to ban IP: %v", err))
+					}
 					j.logger.Info(fmt.Sprintf("IP banned: %s", entry.IP))
 					break
 				}
