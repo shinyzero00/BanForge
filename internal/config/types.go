@@ -13,8 +13,8 @@ type Service struct {
 }
 
 type Config struct {
-	Firewall Firewall `toml:"firewall"`
-	Service  Service  `toml:"service"`
+	Firewall Firewall  `toml:"firewall"`
+	Service  []Service `toml:"service"`
 }
 
 // Rules

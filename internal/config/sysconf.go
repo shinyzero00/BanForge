@@ -117,3 +117,12 @@ func FindFirewall() error {
 
 	return fmt.Errorf("firewall not found")
 }
+
+func LoadConfig() (*Config, error) {
+	cfg := &Config{}
+	_, err := toml.DecodeFile("/etc/banforge/config.toml", cfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode config: %w", err)
+	}
+	return cfg, nil
+}
