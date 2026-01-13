@@ -12,7 +12,7 @@ type DB struct {
 	db     *sql.DB
 }
 
-func NewDB(path string) (*DB, error) {
+func NewDB() (*DB, error) {
 	db, err := sql.Open("sqlite3", "/var/lib/banforge/storage.db")
 	if err != nil {
 		return nil, err

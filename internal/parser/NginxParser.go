@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
@@ -23,19 +22,26 @@ func NewNginxParser() *NginxParser {
 	}
 }
 
-func (p *NginxParser) Parse(line string) (*storage.LogEntry, error) {
+func (p *NginxParser) Parse(eventCh <-chan Event, resultCh chan<- *storage.LogEntry) {
 	// Group 1: IP, Group 2: Timestamp, Group 3: Method, Group 4: Path, Group 5: Status
-	matches := p.pattern.FindStringSubmatch(line)
-	if matches == nil {
-		return nil, fmt.Errorf("invalid log format")
-	}
+	go func() {
+		for event := range eventCh {
+			matches := p.pattern.FindStringSubmatch(event.Data)
+			if matches == nil {
+				continue
+			}
+			path := matches[4]
+			status := matches[5]
+			method := matches[3]
 
-	return &storage.LogEntry{
-		Service: "nginx",
-		IP:      matches[1],
-		Path:    &matches[4],
-		Status:  &matches[5],
-		Method:  &matches[3],
-		Reason:  nil,
-	}, nil
+			resultCh <- &storage.LogEntry{
+				Service: "nginx",
+				IP:      matches[1],
+				Path:    &path,
+				Status:  &status,
+				Method:  &method,
+				Reason:  nil,
+			}
+		}
+	}()
 }
