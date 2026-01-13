@@ -40,7 +40,6 @@ func (p *NginxParser) Parse(eventCh <-chan Event, resultCh chan<- *storage.LogEn
 				Path:    &path,
 				Status:  &status,
 				Method:  &method,
-				Reason:  nil,
 			}
 		}
 	}()

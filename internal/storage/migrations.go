@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS requests (
 	path TEXT,
 	method TEXT,
 	status TEXT,
+	viewed BOOLEAN DEFAULT FALSE,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

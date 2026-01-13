@@ -21,19 +21,13 @@ func Write(db *DB, resultCh <-chan *LogEntry) {
 			method = *result.Method
 		}
 
-		reason := ""
-		if result.Reason != nil {
-			reason = *result.Reason
-		}
-
 		_, err := db.db.Exec(
-			"INSERT INTO requests (service, ip, path, method, status, reason, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+			"INSERT INTO requests (service, ip, path, method, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
 			result.Service,
 			result.IP,
 			path,
 			method,
 			status,
-			reason,
 			time.Now().Format(time.RFC3339),
 		)
 		if err != nil {

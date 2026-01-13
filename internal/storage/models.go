@@ -1,15 +1,19 @@
 package storage
 
 type LogEntry struct {
-	Service string
-	IP      string
-	Path    *string
-	Status  *string
-	Method  *string
-	Reason  *string
+	ID        int     `db:"id"`
+	Service   string  `db:"service"`
+	IP        string  `db:"ip"`
+	Path      *string `db:"path"`
+	Status    *string `db:"status"`
+	Method    *string `db:"method"`
+	IsViewed  *bool   `db:"viewed"`
+	CreatedAt string  `db:"created_at"`
 }
 
 type Ban struct {
-	IP     string
-	Reason *string
+	ID       int     `db:"id"`
+	IP       string  `db:"ip"`
+	Reason   *string `db:"reason"`
+	BannedAt string  `db:"banned_at"`
 }
