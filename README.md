@@ -2,6 +2,8 @@
 
 Log-based IPS system written in Go for Linux-based system.
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/d3m0k1d/BanForge/cmd/banforge.svg)](https://pkg.go.dev/github.com/d3m0k1d/BanForge/cmd/banforge)
+[![License](https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green?style=plastic)](https://github.com/d3m0k1d/BanForge/blob/master/LICENSE)
 # Table of contents
 1. [Overview](#overview)
 2. [Requirements](#requirements)
