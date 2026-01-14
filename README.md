@@ -2,7 +2,7 @@
 
 Log-based IPS system written in Go for Linux-based system.
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/d3m0k1d/BanForge/cmd/banforge.svg)](https://pkg.go.dev/github.com/d3m0k1d/BanForge/cmd/banforge)
+[![Go Reference](https://pkg.go.dev/badge/github.com/d3m0k1d/BanForge/cmd/banforge.svg)](https://pkg.go.dev/github.com/d3m0k1d/BanForge)
 [![License](https://img.shields.io/badge/license-%20%20GNU%20GPLv3%20-green?style=plastic)](https://github.com/d3m0k1d/BanForge/blob/master/LICENSE)
 # Table of contents
 1. [Overview](#overview)
@@ -29,7 +29,7 @@ If you have any questions or suggestions, create issue on [Github](https://githu
 - ufw/iptables/nftables/firewalld
 
 # Installation
-Search for a release on the [Gitea](https://gitea.d3m0k1d.ru/d3m0k1d/BanForge/releases) releases page and download it. Then create or copy a systemd unit file.
+Search for a release on the [Gitea](https://gitea.d3m0k1d.ru/d3m01d/BanForge/releases) releases page and download it. Then create or copy a systemd unit file.
 Or clone the repo and use the Makefile.
 ```
 git clone https://gitea.d3m0k1d.ru/d3m0k1d/BanForge.git
