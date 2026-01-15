@@ -27,6 +27,7 @@ func Execute() {
 	rootCmd.AddCommand(command.RuleCmd)
 	rootCmd.AddCommand(command.BanCmd)
 	rootCmd.AddCommand(command.UnbanCmd)
+	rootCmd.AddCommand(command.BanListCmd)
 	command.RuleRegister()
 	command.FwRegister()
 	if err := rootCmd.Execute(); err != nil {

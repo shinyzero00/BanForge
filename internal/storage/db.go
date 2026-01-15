@@ -2,11 +2,13 @@ package storage
 
 import (
 	"database/sql"
+	"os"
 
 	"fmt"
 	"time"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
+	"github.com/jedib0t/go-pretty/v6/table"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -84,5 +86,33 @@ func (d *DB) AddBan(ip string) error {
 		d.logger.Error("Failed to add ban", "error", err)
 		return err
 	}
+	return nil
+}
+
+func (d *DB) BanList() error {
+
+	var count int
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.SetStyle(table.StyleBold)
+	t.AppendHeader(table.Row{"№", "IP", "Banned At"})
+	rows, err := d.db.Query("SELECT ip, banned_at  FROM bans")
+	if err != nil {
+		d.logger.Error("Failed to get ban list", "error", err)
+		return err
+	}
+	for rows.Next() {
+		count++
+		var ip string
+		var bannedAt string
+		err := rows.Scan(&ip, &bannedAt)
+		if err != nil {
+			d.logger.Error("Failed to get ban list", "error", err)
+			return err
+		}
+		t.AppendRow(table.Row{count, ip, bannedAt})
+
+	}
+	t.Render()
 	return nil
 }
