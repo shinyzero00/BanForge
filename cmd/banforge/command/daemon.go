@@ -1,7 +1,10 @@
 package command
 
 import (
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/d3m0k1d/BanForge/internal/blocker"
@@ -17,6 +20,8 @@ var DaemonCmd = &cobra.Command{
 	Use:   "daemon",
 	Short: "Run BanForge daemon process",
 	Run: func(cmd *cobra.Command, args []string) {
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, syscall.SIGINT)
+		defer stop()
 		log := logger.New(false)
 		log.Info("Starting BanForge daemon")
 		db, err := storage.NewDB()
@@ -77,6 +82,7 @@ var DaemonCmd = &cobra.Command{
 			}
 
 			go pars.Start()
+			defer pars.Stop()
 			go func(p *parser.Scanner, serviceName string) {
 				log.Info("Starting nginx parser", "service", serviceName)
 				ng := parser.NewNginxParser()
@@ -85,7 +91,7 @@ var DaemonCmd = &cobra.Command{
 				go storage.Write(db, resultCh)
 			}(pars, svc.Name)
 		}
-
-		select {}
+		<-ctx.Done()
+		log.Info("Shutdown signal received")
 	},
 }

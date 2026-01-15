@@ -13,5 +13,9 @@ Restart=always
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=banforge
+
+TimeoutStopSec=90
+KillSignal=SIGTERM
+
 [Install]
 WantedBy=multi-user.target

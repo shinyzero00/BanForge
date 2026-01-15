@@ -3,6 +3,9 @@ package storage
 import (
 	"database/sql"
 
+	"fmt"
+	"time"
+
 	"github.com/d3m0k1d/BanForge/internal/logger"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -58,6 +61,27 @@ func (d *DB) MarkAsViewed(id int) error {
 	_, err := d.db.Exec("UPDATE requests SET viewed = 1 WHERE id = ?", id)
 	if err != nil {
 		d.logger.Error("Failed to mark as viewed", "error", err)
+		return err
+	}
+	return nil
+}
+
+func (d *DB) IsBanned(ip string) (bool, error) {
+	var bannedIP string
+	err := d.db.QueryRow("SELECT ip FROM bans WHERE ip = ? ", ip).Scan(&bannedIP)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed to check ban status: %w", err)
+	}
+	return true, nil
+}
+
+func (d *DB) AddBan(ip string) error {
+	_, err := d.db.Exec("INSERT INTO bans (ip, reason, banned_at) VALUES (?, ?, ?)", ip, "1", time.Now().Format(time.RFC3339))
+	if err != nil {
+		d.logger.Error("Failed to add ban", "error", err)
 		return err
 	}
 	return nil

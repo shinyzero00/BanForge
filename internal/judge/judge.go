@@ -48,7 +48,6 @@ func (j *Judge) ProcessUnviewed() error {
 			j.logger.Error(fmt.Sprintf("Failed to close database connection: %v", err))
 		}
 	}()
-
 	for rows.Next() {
 		var entry storage.LogEntry
 		err = rows.Scan(&entry.ID, &entry.Service, &entry.IP, &entry.Path, &entry.Status, &entry.Method, &entry.IsViewed, &entry.CreatedAt)
@@ -65,11 +64,22 @@ func (j *Judge) ProcessUnviewed() error {
 					(rule.Path == "" || entry.Path == rule.Path) {
 
 					j.logger.Info(fmt.Sprintf("Rule matched for IP: %s, Service: %s", entry.IP, entry.Service))
-					err = j.Blocker.Ban(entry.IP)
+					ban_status, err := j.db.IsBanned(entry.IP)
 					if err != nil {
-						j.logger.Error(fmt.Sprintf("Failed to ban IP: %v", err))
+						j.logger.Error(fmt.Sprintf("Failed to check ban status: %v", err))
+						return err
 					}
-					j.logger.Info(fmt.Sprintf("IP banned: %s", entry.IP))
+					if !ban_status {
+						err = j.Blocker.Ban(entry.IP)
+						if err != nil {
+							j.logger.Error(fmt.Sprintf("Failed to ban IP: %v", err))
+						}
+						j.logger.Info(fmt.Sprintf("IP banned: %s", entry.IP))
+						err = j.db.AddBan(entry.IP)
+						if err != nil {
+							j.logger.Error(fmt.Sprintf("Failed to add ban: %v", err))
+						}
+					}
 					break
 				}
 			}
