@@ -5,7 +5,7 @@ configure detection rules, and control the daemon process.
 ### init - create a deps file
 
 ```shell
-banfogre init
+banforge init
 ```
 
 **Description**
@@ -34,7 +34,7 @@ These commands provide an abstraction over your firewall. If you want to simplif
 ### rule - Manages detection rules
 
 ```shell
-banforge rule add -n rule.name -m 403
+banforge rule add -n rule.name -c 403
 banforge rule list 
 ```
 
