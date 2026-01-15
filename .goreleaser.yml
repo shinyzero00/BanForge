@@ -2,6 +2,13 @@
 version: 2
 project_name: BanForge
 
+
+
+gitea_urls:
+  api: https://gitea.d3m0k1d.ru/api/v1
+  download: https://gitea.d3m0k1d.ru/d3m0k1d/BanForge/releases/download
+
+
 builds:
   - id: banforge
     main: ./cmd/banforge/main.go
