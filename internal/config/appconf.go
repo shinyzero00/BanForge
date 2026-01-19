@@ -3,6 +3,9 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/d3m0k1d/BanForge/internal/logger"
@@ -22,7 +25,7 @@ func LoadRuleConfig() ([]Rule, error) {
 	return cfg.Rules, nil
 }
 
-func NewRule(Name string, ServiceName string, Path string, Status string, Method string) error {
+func NewRule(Name string, ServiceName string, Path string, Status string, Method string, ttl string) error {
 	r, err := LoadRuleConfig()
 	if err != nil {
 		r = []Rule{}
@@ -31,7 +34,7 @@ func NewRule(Name string, ServiceName string, Path string, Status string, Method
 		fmt.Printf("Rule name can't be empty\n")
 		return nil
 	}
-	r = append(r, Rule{Name: Name, ServiceName: ServiceName, Path: Path, Status: Status, Method: Method})
+	r = append(r, Rule{Name: Name, ServiceName: ServiceName, Path: Path, Status: Status, Method: Method, BanTime: ttl})
 	file, err := os.Create("/etc/banforge/rules.toml")
 	if err != nil {
 		return err
@@ -103,4 +106,32 @@ func EditRule(Name string, ServiceName string, Path string, Status string, Metho
 	}
 
 	return nil
+}
+
+func ParseDurationWithYears(s string) (time.Duration, error) {
+	if strings.HasSuffix(s, "y") {
+		years, err := strconv.Atoi(strings.TrimSuffix(s, "y"))
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(years) * 365 * 24 * time.Hour, nil
+	}
+
+	if strings.HasSuffix(s, "M") {
+		months, err := strconv.Atoi(strings.TrimSuffix(s, "M"))
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(months) * 30 * 24 * time.Hour, nil
+	}
+
+	if strings.HasSuffix(s, "d") {
+		days, err := strconv.Atoi(strings.TrimSuffix(s, "d"))
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(days) * 24 * time.Hour, nil
+	}
+
+	return time.ParseDuration(s)
 }

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/d3m0k1d/BanForge/internal/config"
 	"github.com/d3m0k1d/BanForge/internal/logger"
 	"github.com/jedib0t/go-pretty/v6/table"
 	_ "github.com/mattn/go-sqlite3"
@@ -80,12 +81,28 @@ func (d *DB) IsBanned(ip string) (bool, error) {
 	return true, nil
 }
 
-func (d *DB) AddBan(ip string) error {
-	_, err := d.db.Exec("INSERT INTO bans (ip, reason, banned_at) VALUES (?, ?, ?)", ip, "1", time.Now().Format(time.RFC3339))
+func (d *DB) AddBan(ip string, ttl string) error {
+	duration, err := config.ParseDurationWithYears(ttl)
+	if err != nil {
+		d.logger.Error("Invalid duration format", "ttl", ttl, "error", err)
+		return fmt.Errorf("invalid duration: %w", err)
+	}
+
+	now := time.Now()
+	expiredAt := now.Add(duration)
+
+	_, err = d.db.Exec(
+		"INSERT INTO bans (ip, reason, banned_at, expired_at) VALUES (?, ?, ?, ?)",
+		ip,
+		"1",
+		now.Format(time.RFC3339),
+		expiredAt.Format(time.RFC3339),
+	)
 	if err != nil {
 		d.logger.Error("Failed to add ban", "error", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -115,4 +132,23 @@ func (d *DB) BanList() error {
 	}
 	t.Render()
 	return nil
+}
+
+func (d *DB) CheckExpiredBans() ([]string, error) {
+	var ips []string
+	rows, err := d.db.Query("SELECT ip FROM bans WHERE expired_at < ?", time.Now().Format(time.RFC3339))
+	if err != nil {
+		d.logger.Error("Failed to get ban list", "error", err)
+		return nil, err
+	}
+	for rows.Next() {
+		var ip string
+		err := rows.Scan(&ip)
+		if err != nil {
+			d.logger.Error("Failed to get ban list", "error", err)
+			return nil, err
+		}
+		ips = append(ips, ip)
+	}
+	return ips, nil
 }

@@ -2,6 +2,7 @@ package judge
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/d3m0k1d/BanForge/internal/blocker"
 	"github.com/d3m0k1d/BanForge/internal/config"
@@ -75,7 +76,7 @@ func (j *Judge) ProcessUnviewed() error {
 							j.logger.Error(fmt.Sprintf("Failed to ban IP: %v", err))
 						}
 						j.logger.Info(fmt.Sprintf("IP banned: %s", entry.IP))
-						err = j.db.AddBan(entry.IP)
+						err = j.db.AddBan(entry.IP, rule.BanTime)
 						if err != nil {
 							j.logger.Error(fmt.Sprintf("Failed to add ban: %v", err))
 						}
@@ -99,4 +100,25 @@ func (j *Judge) ProcessUnviewed() error {
 	}
 
 	return nil
+}
+
+func (j *Judge) UnbanChecker() {
+	tick := time.NewTicker(5 * time.Minute)
+	defer tick.Stop()
+
+	for range tick.C {
+		ips, err := j.db.CheckExpiredBans()
+		if err != nil {
+			j.logger.Error(fmt.Sprintf("Failed to check expired bans: %v", err))
+			continue
+		}
+
+		for _, ip := range ips {
+			if err := j.Blocker.Unban(ip); err != nil {
+				j.logger.Error(fmt.Sprintf("Failed to unban IP %s: %v", ip, err))
+				continue
+			}
+			j.logger.Info(fmt.Sprintf("IP unbanned: %s", ip))
+		}
+	}
 }

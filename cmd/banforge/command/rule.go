@@ -14,6 +14,7 @@ var (
 	path    string
 	status  string
 	method  string
+	ttl     string
 )
 
 var RuleCmd = &cobra.Command{
@@ -37,8 +38,10 @@ var AddCmd = &cobra.Command{
 			fmt.Printf("At least 1 rule field must be filled in.")
 			os.Exit(1)
 		}
-
-		err := config.NewRule(name, service, path, status, method)
+		if ttl == "" {
+			ttl = "1y"
+		}
+		err := config.NewRule(name, service, path, status, method, ttl)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -68,6 +71,7 @@ func RuleRegister() {
 	AddCmd.Flags().StringVarP(&name, "name", "n", "", "rule name (required)")
 	AddCmd.Flags().StringVarP(&service, "service", "s", "", "service name")
 	AddCmd.Flags().StringVarP(&path, "path", "p", "", "request path")
-	AddCmd.Flags().StringVarP(&status, "status", "c", "", "HTTP status code")
-	AddCmd.Flags().StringVarP(&method, "method", "m", "", "HTTP method")
+	AddCmd.Flags().StringVarP(&status, "status", "c", "", "status code")
+	AddCmd.Flags().StringVarP(&method, "method", "m", "", "method")
+	AddCmd.Flags().StringVarP(&ttl, "ttl", "t", "", "ban time")
 }

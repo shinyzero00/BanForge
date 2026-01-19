@@ -50,6 +50,7 @@ var DaemonCmd = &cobra.Command{
 		}
 		j := judge.New(db, b)
 		j.LoadRules(r)
+		go j.UnbanChecker()
 		go func() {
 			ticker := time.NewTicker(5 * time.Second)
 			defer ticker.Stop()

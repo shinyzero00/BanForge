@@ -198,7 +198,7 @@ func TestAddBan(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = d.AddBan("127.0.0.1")
+	err = d.AddBan("127.0.0.1", "7h")
 	if err != nil {
 		t.Fatal(err)
 	}
