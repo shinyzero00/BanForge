@@ -61,15 +61,14 @@ var DaemonCmd = &cobra.Command{
 			}
 		}()
 
+		var scanners []*parser.Scanner
+
 		for _, svc := range cfg.Service {
 			log.Info(
 				"Processing service",
-				"name",
-				svc.Name,
-				"enabled",
-				svc.Enabled,
-				"path",
-				svc.LogPath,
+				"name", svc.Name,
+				"enabled", svc.Enabled,
+				"path", svc.LogPath,
 			)
 
 			if !svc.Enabled {
@@ -77,30 +76,80 @@ var DaemonCmd = &cobra.Command{
 				continue
 			}
 
-			if svc.Name != "nginx" {
-				log.Info("Only nginx supported, skipping", "name", svc.Name)
-				continue
-			}
-
 			log.Info("Starting parser for service", "name", svc.Name, "path", svc.LogPath)
-
-			pars, err := parser.NewScanner(svc.LogPath)
-			if err != nil {
-				log.Error("Failed to create scanner", "service", svc.Name, "error", err)
+			if svc.Logging != "file" && svc.Logging != "journald" {
+				log.Error("Invalid logging type", "type", svc.Logging)
 				continue
 			}
 
-			go pars.Start()
-			defer pars.Stop()
-			go func(p *parser.Scanner, serviceName string) {
-				log.Info("Starting nginx parser", "service", serviceName)
-				ng := parser.NewNginxParser()
-				resultCh := make(chan *storage.LogEntry, 100)
-				ng.Parse(p.Events(), resultCh)
-				go storage.Write(db, resultCh)
-			}(pars, svc.Name)
+			if svc.Logging == "file" {
+				log.Info("Logging to file", "path", svc.LogPath)
+				pars, err := parser.NewScannerTail(svc.LogPath)
+				if err != nil {
+					log.Error("Failed to create scanner", "service", svc.Name, "error", err)
+					continue
+				}
+
+				scanners = append(scanners, pars)
+
+				go pars.Start()
+
+				go func(p *parser.Scanner, serviceName string) {
+					if svc.Name == "nginx" {
+						log.Info("Starting nginx parser", "service", serviceName)
+						ng := parser.NewNginxParser()
+						resultCh := make(chan *storage.LogEntry, 100)
+						ng.Parse(p.Events(), resultCh)
+						go storage.Write(db, resultCh)
+					}
+					if svc.Name == "ssh" {
+						log.Info("Starting ssh parser", "service", serviceName)
+						ssh := parser.NewSshdParser()
+						resultCh := make(chan *storage.LogEntry, 100)
+						ssh.Parse(p.Events(), resultCh)
+						go storage.Write(db, resultCh)
+					}
+				}(pars, svc.Name)
+				continue
+			}
+
+			if svc.Logging == "journald" {
+				log.Info("Logging to journald", "path", svc.LogPath)
+				pars, err := parser.NewScannerJournald(svc.LogPath)
+				if err != nil {
+					log.Error("Failed to create scanner", "service", svc.Name, "error", err)
+					continue
+				}
+
+				scanners = append(scanners, pars)
+
+				go pars.Start()
+				go func(p *parser.Scanner, serviceName string) {
+					if svc.Name == "nginx" {
+						log.Info("Starting nginx parser", "service", serviceName)
+						ng := parser.NewNginxParser()
+						resultCh := make(chan *storage.LogEntry, 100)
+						ng.Parse(p.Events(), resultCh)
+						go storage.Write(db, resultCh)
+					}
+					if svc.Name == "ssh" {
+						log.Info("Starting ssh parser", "service", serviceName)
+						ssh := parser.NewSshdParser()
+						resultCh := make(chan *storage.LogEntry, 100)
+						ssh.Parse(p.Events(), resultCh)
+						go storage.Write(db, resultCh)
+					}
+
+				}(pars, svc.Name)
+				continue
+			}
 		}
+
 		<-ctx.Done()
 		log.Info("Shutdown signal received")
+
+		for _, s := range scanners {
+			s.Stop()
+		}
 	},
 }

@@ -3,6 +3,7 @@ package parser
 import (
 	"bufio"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
@@ -17,24 +18,52 @@ type Scanner struct {
 	ch        chan Event
 	stopCh    chan struct{}
 	logger    *logger.Logger
+	cmd       *exec.Cmd
 	file      *os.File
 	pollDelay time.Duration
 }
 
-func NewScanner(path string) (*Scanner, error) {
-	file, err := os.Open(
-		path,
-	) // #nosec G304 -- admin tool, runs as root, path controlled by operator
+func NewScannerTail(path string) (*Scanner, error) {
+	cmd := exec.Command("tail", "-F", "-n", "10", path)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
 
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
 	return &Scanner{
-		scanner:   bufio.NewScanner(file),
+		scanner:   bufio.NewScanner(stdout),
 		ch:        make(chan Event, 100),
 		stopCh:    make(chan struct{}),
 		logger:    logger.New(false),
-		file:      file,
+		file:      nil,
+		cmd:       cmd,
+		pollDelay: 100 * time.Millisecond,
+	}, nil
+}
+
+func NewScannerJournald(unit string) (*Scanner, error) {
+	cmd := exec.Command("journalctl", "-u", unit, "-f", "-n", "0", "-o", "cat", "--no-pager")
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	return &Scanner{
+		scanner:   bufio.NewScanner(stdout),
+		ch:        make(chan Event, 100),
+		stopCh:    make(chan struct{}),
+		logger:    logger.New(false),
+		cmd:       cmd,
+		file:      nil,
 		pollDelay: 100 * time.Millisecond,
 	}, nil
 }
@@ -60,7 +89,6 @@ func (s *Scanner) Start() {
 						s.logger.Error("Scanner error")
 						return
 					}
-					time.Sleep(s.pollDelay)
 				}
 			}
 		}
@@ -69,11 +97,26 @@ func (s *Scanner) Start() {
 
 func (s *Scanner) Stop() {
 	close(s.stopCh)
-	time.Sleep(150 * time.Millisecond)
-	err := s.file.Close()
-	if err != nil {
-		s.logger.Error("Failed to close file")
+
+	if s.cmd != nil && s.cmd.Process != nil {
+		s.logger.Info("Stopping process", "pid", s.cmd.Process.Pid)
+		err := s.cmd.Process.Kill()
+		if err != nil {
+			s.logger.Error("Failed to kill process", "err", err)
+		}
+		err = s.cmd.Wait()
+		if err != nil {
+			s.logger.Error("Failed to wait process", "err", err)
+		}
+
 	}
+
+	if s.file != nil {
+		if err := s.file.Close(); err != nil {
+			s.logger.Error("Failed to close file", "err", err)
+		}
+	}
+	time.Sleep(150 * time.Millisecond)
 	close(s.ch)
 }
 
