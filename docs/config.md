@@ -1,0 +1,45 @@
+# Configs
+
+## config.toml
+Main configuration file for BanForge.
+
+Example:
+```toml
+[firewall]
+  name = "nftables"
+  config = "/etc/nftables.conf"
+
+[[service]]
+  name = "nginx"
+  log_path = "/home/d3m0k1d/test.log"
+  enabled = true
+
+[[service]]
+  name = "nginx"
+  log_path = "/var/log/nginx/access.log"
+  enabled = false
+```
+**Description**
+The [firewall] section defines firewall parameters. The banforge init command automatically detects your installed firewall (nftables, iptables, ufw, firewalld). For firewalls that require a configuration file, specify the path in the config parameter.
+
+The [[service]] section is configured manually. Currently, only nginx is supported. To add a service, create a [[service]] block and specify the log_path to the nginx log file you want to monitor.
+
+
+## rules.toml
+Rules configuration file for BanForge.
+
+If you wanna configure rules by cli command see [here](https://github.com/d3m0k1d/BanForge/blob/main/docs/cli.md)
+
+Example:
+```toml
+[[rule]]
+  name = "304 http"
+  service = "nginx"
+  path = ""
+  status = "304"
+  method = ""
+  ban_time = "1m"
+```
+**Description**
+The [[rule]] section require name and one of the following parameters: service, path, status, method. To add a rule, create a [[rule]] block and specify the parameters.
+ban_time require in format "1m", "1h", "1d", "1M", "1y"

@@ -57,4 +57,5 @@ These command help you to create and manage detection rules in CLI interface.
 | -m -method  | -        |
 | -c -status  | -        |
 | -t -ttl     | -(if not used default ban 1 year)        |
+
 You must specify at least 1 of the optional flags to create a rule.
