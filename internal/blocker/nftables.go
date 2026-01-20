@@ -104,15 +104,14 @@ func (n *Nftables) Setup(config string) error {
 
 	nftConfig := `table inet banforge {
 	chain input {
-		type filter hook input priority 0
-		policy accept
+		type filter hook input priority filter; policy accept;
+		jump banned
 	}
 
 	chain banned {
 	}
 }
 `
-
 	cmd := exec.Command("sudo", "tee", config)
 	stdin, err := cmd.StdinPipe()
 	if err != nil {

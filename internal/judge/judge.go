@@ -129,6 +129,10 @@ func (j *Judge) UnbanChecker() {
 		}
 
 		for _, ip := range ips {
+			err = j.db.RemoveBan(ip)
+			if err != nil {
+				j.logger.Error(fmt.Sprintf("Failed to remove ban: %v", err))
+			}
 			if err := j.Blocker.Unban(ip); err != nil {
 				j.logger.Error(fmt.Sprintf("Failed to unban IP %s: %v", ip, err))
 				continue

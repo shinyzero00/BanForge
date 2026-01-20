@@ -7,6 +7,7 @@ import (
 
 	"github.com/d3m0k1d/BanForge/internal/blocker"
 	"github.com/d3m0k1d/BanForge/internal/config"
+	"github.com/d3m0k1d/BanForge/internal/storage"
 	"github.com/spf13/cobra"
 )
 
@@ -17,6 +18,11 @@ var UnbanCmd = &cobra.Command{
 	Use:   "unban",
 	Short: "Unban IP",
 	Run: func(cmd *cobra.Command, args []string) {
+		db, err := storage.NewDB()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		cfg, err := config.LoadConfig()
 		if err != nil {
 			fmt.Println(err)
@@ -41,6 +47,11 @@ var UnbanCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		err = db.RemoveBan(ip)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		fmt.Println("IP unblocked successfully!")
 	},
 }
@@ -49,7 +60,11 @@ var BanCmd = &cobra.Command{
 	Use:   "ban",
 	Short: "Ban IP",
 	Run: func(cmd *cobra.Command, args []string) {
-
+		db, err := storage.NewDB()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		cfg, err := config.LoadConfig()
 		if err != nil {
 			fmt.Println(err)
@@ -74,7 +89,12 @@ var BanCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Println("IP unblocked successfully!")
+		err = db.AddBan(ip, "1y")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("IP blocked successfully!")
 	},
 }
 

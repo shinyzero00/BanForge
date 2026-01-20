@@ -111,6 +111,15 @@ func (d *DB) AddBan(ip string, ttl string) error {
 	return nil
 }
 
+func (d *DB) RemoveBan(ip string) error {
+	_, err := d.db.Exec("DELETE FROM bans WHERE ip = ?", ip)
+	if err != nil {
+		d.logger.Error("Failed to remove ban", "error", err)
+		return err
+	}
+	return nil
+}
+
 func (d *DB) BanList() error {
 
 	var count int
