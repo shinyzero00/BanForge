@@ -60,7 +60,8 @@ var DaemonCmd = &cobra.Command{
 				}
 			}
 		}()
-
+		resultCh := make(chan *storage.LogEntry, 1000)
+		go storage.Write(db, resultCh)
 		var scanners []*parser.Scanner
 
 		for _, svc := range cfg.Service {
@@ -98,16 +99,12 @@ var DaemonCmd = &cobra.Command{
 					if svc.Name == "nginx" {
 						log.Info("Starting nginx parser", "service", serviceName)
 						ng := parser.NewNginxParser()
-						resultCh := make(chan *storage.LogEntry, 100)
 						ng.Parse(p.Events(), resultCh)
-						go storage.Write(db, resultCh)
 					}
 					if svc.Name == "ssh" {
 						log.Info("Starting ssh parser", "service", serviceName)
 						ssh := parser.NewSshdParser()
-						resultCh := make(chan *storage.LogEntry, 100)
 						ssh.Parse(p.Events(), resultCh)
-						go storage.Write(db, resultCh)
 					}
 				}(pars, svc.Name)
 				continue
@@ -128,16 +125,14 @@ var DaemonCmd = &cobra.Command{
 					if svc.Name == "nginx" {
 						log.Info("Starting nginx parser", "service", serviceName)
 						ng := parser.NewNginxParser()
-						resultCh := make(chan *storage.LogEntry, 100)
 						ng.Parse(p.Events(), resultCh)
-						go storage.Write(db, resultCh)
+
 					}
 					if svc.Name == "ssh" {
 						log.Info("Starting ssh parser", "service", serviceName)
 						ssh := parser.NewSshdParser()
-						resultCh := make(chan *storage.LogEntry, 100)
 						ssh.Parse(p.Events(), resultCh)
-						go storage.Write(db, resultCh)
+
 					}
 
 				}(pars, svc.Name)
