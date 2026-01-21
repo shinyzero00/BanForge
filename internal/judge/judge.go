@@ -166,13 +166,20 @@ func matchPath(path string, rulePath string) bool {
 	if rulePath == "" {
 		return true
 	}
-	if strings.HasPrefix(rulePath, "/*") {
-		prefix := strings.TrimPrefix(rulePath, "*")
-		return strings.HasPrefix(path, prefix)
-	}
-	if strings.HasSuffix(rulePath, "*") {
-		suffix := strings.TrimSuffix(rulePath, "*")
+
+	if strings.HasPrefix(rulePath, "*") {
+		suffix := strings.TrimPrefix(rulePath, "*")
 		return strings.HasSuffix(path, suffix)
+	}
+
+	if strings.HasPrefix(rulePath, "/*") {
+		suffix := strings.TrimPrefix(rulePath, "/*")
+		return strings.HasSuffix(path, suffix)
+	}
+
+	if strings.HasSuffix(rulePath, "*") {
+		prefix := strings.TrimSuffix(rulePath, "*")
+		return strings.HasPrefix(path, prefix)
 	}
 	return path == rulePath
 }
