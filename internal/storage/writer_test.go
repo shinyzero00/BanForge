@@ -28,7 +28,7 @@ func TestWrite(t *testing.T) {
 
 	close(resultCh)
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	err = d.db.QueryRow("SELECT ip FROM requests LIMIT 1").Scan(&ip)
 	if err != nil {

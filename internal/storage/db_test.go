@@ -37,7 +37,7 @@ func createTestDBStruct(t *testing.T) *DB {
 	}
 
 	filePath := filepath.Join(tmpDir, "test.db")
-	sqlDB, err := sql.Open("sqlite3", filePath)
+	sqlDB, err := sql.Open("sqlite", filePath)
 	if err != nil {
 		t.Fatal(err)
 	}

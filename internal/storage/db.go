@@ -21,8 +21,11 @@ type DB struct {
 func NewDB() (*DB, error) {
 	db, err := sql.Open(
 		"sqlite",
-		"/var/lib/banforge/storage.db?mode=rwc&_journal_mode=WAL&_busy_timeout=10000&cache=shared",
+		"/var/lib/banforge/storage.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(30000)&_pragma=synchronous(NORMAL)",
 	)
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(0)
 	if err != nil {
 		return nil, err
 	}
