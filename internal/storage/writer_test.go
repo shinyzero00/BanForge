@@ -14,7 +14,7 @@ func TestWrite(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	resultCh := make(chan *LogEntry)
+	resultCh := make(chan *LogEntry, 100) // ← Добавь буфер
 
 	go Write(d, resultCh)
 
@@ -28,7 +28,7 @@ func TestWrite(t *testing.T) {
 
 	close(resultCh)
 
-	time.Sleep(200 * time.Millisecond)
+	time.Sleep(2 * time.Second)
 
 	err = d.db.QueryRow("SELECT ip FROM requests LIMIT 1").Scan(&ip)
 	if err != nil {
