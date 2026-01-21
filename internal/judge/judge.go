@@ -39,7 +39,6 @@ func (j *Judge) LoadRules(rules []config.Rule) {
 }
 
 func (j *Judge) ProcessUnviewed() error {
-	j.logger.Info("Processing unviewed logs")
 	rows, err := j.db.SearchUnViewed()
 	if err != nil {
 		j.logger.Error(fmt.Sprintf("Failed to query database: %v", err))
@@ -64,7 +63,6 @@ func (j *Judge) ProcessUnviewed() error {
 			&entry.IsViewed,
 			&entry.CreatedAt,
 		)
-		j.logger.Info("Scanning database row," + entry.IP)
 		if err != nil {
 			j.logger.Error(fmt.Sprintf("Failed to scan database row: %v", err))
 			continue

@@ -55,7 +55,6 @@ var DaemonCmd = &cobra.Command{
 			ticker := time.NewTicker(5 * time.Second)
 			defer ticker.Stop()
 			for range ticker.C {
-				log.Info("TICK: ProcessUnviewed about to run")
 				if err := j.ProcessUnviewed(); err != nil {
 					log.Error("Failed to process unviewed", "error", err)
 				}
