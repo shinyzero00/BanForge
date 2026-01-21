@@ -5,6 +5,7 @@ import (
 )
 
 func Write(db *DB, resultCh <-chan *LogEntry) {
+	db.logger.Info("Starting log writer")
 	const batchSize = 100
 	const flushInterval = 1 * time.Second
 

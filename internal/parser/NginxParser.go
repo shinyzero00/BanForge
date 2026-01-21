@@ -24,35 +24,33 @@ func NewNginxParser() *NginxParser {
 
 func (p *NginxParser) Parse(eventCh <-chan Event, resultCh chan<- *storage.LogEntry) {
 	// Group 1: IP, Group 2: Timestamp, Group 3: Method, Group 4: Path, Group 5: Status
-	go func() {
-		for event := range eventCh {
-			matches := p.pattern.FindStringSubmatch(event.Data)
-			if matches == nil {
-				continue
-			}
-			path := matches[4]
-			status := matches[5]
-			method := matches[3]
-
-			resultCh <- &storage.LogEntry{
-				Service:  "nginx",
-				IP:       matches[1],
-				Path:     path,
-				Status:   status,
-				Method:   method,
-				IsViewed: false,
-			}
-			p.logger.Info(
-				"Parsed nginx log entry",
-				"ip",
-				matches[1],
-				"path",
-				path,
-				"status",
-				status,
-				"method",
-				method,
-			)
+	for event := range eventCh {
+		matches := p.pattern.FindStringSubmatch(event.Data)
+		if matches == nil {
+			continue
 		}
-	}()
+		path := matches[4]
+		status := matches[5]
+		method := matches[3]
+
+		resultCh <- &storage.LogEntry{
+			Service:  "nginx",
+			IP:       matches[1],
+			Path:     path,
+			Status:   status,
+			Method:   method,
+			IsViewed: false,
+		}
+		p.logger.Info(
+			"Parsed nginx log entry",
+			"ip",
+			matches[1],
+			"path",
+			path,
+			"status",
+			status,
+			"method",
+			method,
+		)
+	}
 }
