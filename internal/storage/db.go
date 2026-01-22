@@ -19,8 +19,9 @@ func CreateTables() error {
 		return fmt.Errorf("failed to open requests db: %w", err)
 	}
 	defer func() {
+		err = db_r.Close()
 		if err != nil {
-			db_r.Close()
+			fmt.Println(err)
 		}
 	}()
 
@@ -40,8 +41,9 @@ func CreateTables() error {
 		return fmt.Errorf("failed to open bans db: %w", err)
 	}
 	defer func() {
+		err = db_b.Close()
 		if err != nil {
-			db_b.Close()
+			fmt.Println(err)
 		}
 	}()
 
