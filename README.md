@@ -32,7 +32,7 @@ If you have any questions or suggestions, create issue on [Github](https://githu
 - ufw/iptables/nftables/firewalld
 
 # Installation
-Search for a release on the [Gitea](https://gitea.d3m0k1d.ru/d3m0k1d/BanForge/releases) releases page and download it. Then create or copy(/build dir) a systemd unit(openrc script0) file.
+Search for a release on the [Gitea](https://gitea.d3m0k1d.ru/d3m0k1d/BanForge/releases) releases page and download it. Then create or copy(/build dir) a systemd unit(openrc script) file.
 Or clone the repo and use the Makefile.
 ```
 git clone https://gitea.d3m0k1d.ru/d3m0k1d/BanForge.git
