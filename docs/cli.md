@@ -31,6 +31,7 @@ banforge unban <ip>
 **Description**
 These commands provide an abstraction over your firewall. If you want to simplify the interface to your firewall, you can use these commands.
 
+Flag -t or -ttl add bantime if not used default ban 1 year
 ### list - Lists the IP addresses that are currently blocked
 ```shell
 banforge list

@@ -12,12 +12,20 @@ import (
 )
 
 var (
-	ip string
+	ttl_fw string
 )
 var UnbanCmd = &cobra.Command{
 	Use:   "unban",
 	Short: "Unban IP",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			fmt.Println("IP can't be empty")
+			os.Exit(1)
+		}
+		if ttl_fw == "" {
+			ttl_fw = "1y"
+		}
+		ip := args[0]
 		db, err := storage.NewBanWriter()
 		if err != nil {
 			fmt.Println(err)
@@ -60,6 +68,14 @@ var BanCmd = &cobra.Command{
 	Use:   "ban",
 	Short: "Ban IP",
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) == 0 {
+			fmt.Println("IP can't be empty")
+			os.Exit(1)
+		}
+		if ttl_fw == "" {
+			ttl_fw = "1y"
+		}
+		ip := args[0]
 		db, err := storage.NewBanWriter()
 		if err != nil {
 			fmt.Println(err)
@@ -89,7 +105,7 @@ var BanCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		err = db.AddBan(ip, "1y")
+		err = db.AddBan(ip, ttl_fw)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -99,6 +115,5 @@ var BanCmd = &cobra.Command{
 }
 
 func FwRegister() {
-	BanCmd.Flags().StringVarP(&ip, "ip", "i", "", "ip to ban")
-	UnbanCmd.Flags().StringVarP(&ip, "ip", "i", "", "ip to unban")
+	BanCmd.Flags().StringVarP(&ttl_fw, "ttl", "t", "", "ban time")
 }
