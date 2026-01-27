@@ -1,9 +1,10 @@
 package parser
 
 import (
+	"regexp"
+
 	"github.com/d3m0k1d/BanForge/internal/logger"
 	"github.com/d3m0k1d/BanForge/internal/storage"
-	"regexp"
 )
 
 type ApacheParser struct {
