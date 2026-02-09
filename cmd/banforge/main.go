@@ -28,6 +28,7 @@ func Execute() {
 	rootCmd.AddCommand(command.UnbanCmd)
 	rootCmd.AddCommand(command.BanListCmd)
 	rootCmd.AddCommand(command.VersionCmd)
+	rootCmd.AddCommand(command.PortCmd)
 	command.RuleRegister()
 	command.FwRegister()
 	if err := rootCmd.Execute(); err != nil {

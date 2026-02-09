@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	ttl_fw string
+	ttl_fw   string
+	port     int
+	protocol string
 )
 var UnbanCmd = &cobra.Command{
 	Use:   "unban",
@@ -114,6 +116,65 @@ var BanCmd = &cobra.Command{
 	},
 }
 
+var PortCmd = &cobra.Command{
+	Use:   "port",
+	Short: "Ports commands",
+}
+
+var PortOpenCmd = &cobra.Command{
+	Use:   "open",
+	Short: "Open ports on firewall",
+	Run: func(cmd *cobra.Command, args []string) {
+		if protocol == "" {
+			fmt.Println("Protocol can't be empty")
+			os.Exit(1)
+		}
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fw := cfg.Firewall.Name
+		b := blocker.GetBlocker(fw, cfg.Firewall.Config)
+		err = b.PortOpen(port, protocol)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Port opened successfully!")
+	},
+}
+
+var PortCloseCmd = &cobra.Command{
+	Use:   "close",
+	Short: "Close ports on firewall",
+	Run: func(cmd *cobra.Command, args []string) {
+		if protocol == "" {
+			fmt.Println("Protocol can't be empty")
+			os.Exit(1)
+		}
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fw := cfg.Firewall.Name
+		b := blocker.GetBlocker(fw, cfg.Firewall.Config)
+		err = b.PortClose(port, protocol)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Port closed successfully!")
+	},
+}
+
 func FwRegister() {
 	BanCmd.Flags().StringVarP(&ttl_fw, "ttl", "t", "", "ban time")
+	PortCmd.AddCommand(PortOpenCmd)
+	PortCmd.AddCommand(PortCloseCmd)
+	PortOpenCmd.Flags().IntVarP(&port, "port", "p", 0, "port number")
+	PortOpenCmd.Flags().StringVarP(&protocol, "protocol", "c", "", "protocol")
+	PortCloseCmd.Flags().IntVarP(&port, "port", "p", 0, "port number")
+	PortCloseCmd.Flags().StringVarP(&protocol, "protocol", "c", "", "protocol")
 }
