@@ -3,6 +3,7 @@ package blocker
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
@@ -166,11 +167,78 @@ func (n *Nftables) findRuleHandle(ip string) (string, error) {
 	return "", nil
 }
 
-func (n *Nftables) PortOpen(port int) error {
+func (n *Nftables) PortOpen(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			n.logger.Error("invalid protocol")
+			return fmt.Errorf("invalid protocol")
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command(
+			"nft",
+			"add",
+			"rule",
+			"inet",
+			"banforge",
+			"input",
+			protocol,
+			"dport",
+			s,
+			"accept",
+		)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			n.logger.Error(err.Error())
+			return err
+		}
+		n.logger.Info("Add port " + s + " " + string(output))
+		err = saveNftablesConfig(n.config)
+		if err != nil {
+			n.logger.Error("failed to save config",
+				"config_path", n.config,
+				"error", err.Error())
+			return err
+		}
+	}
 	return nil
 }
 
-func (n *Nftables) PortClose(port int) error {
+func (n *Nftables) PortClose(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			n.logger.Error("invalid protocol")
+			return fmt.Errorf("invalid protocol")
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command(
+			"nft",
+			"add",
+			"rule",
+			"inet",
+			"banforge",
+			"input",
+			protocol,
+			"dport",
+			s,
+			"drop",
+		)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			n.logger.Error(err.Error())
+			return err
+		}
+		n.logger.Info("Add port " + s + " " + string(output))
+		err = saveNftablesConfig(n.config)
+		if err != nil {
+			n.logger.Error("failed to save config",
+				"config_path", n.config,
+				"error", err.Error())
+			return err
+		}
+
+	}
 	return nil
 }
 

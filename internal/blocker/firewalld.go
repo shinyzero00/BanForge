@@ -1,6 +1,7 @@
 package blocker
 
 import (
+	"fmt"
 	"os/exec"
 	"strconv"
 
@@ -59,11 +60,20 @@ func (f *Firewalld) Unban(ip string) error {
 	return nil
 }
 
-func (f *Firewalld) PortOpen(port int) error {
+func (f *Firewalld) PortOpen(port int, protocol string) error {
 	// #nosec G204 - handle is extracted from nftables output and validated
 	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			f.logger.Error("invalid protocol")
+			return fmt.Errorf("invalid protocol")
+		}
 		s := strconv.Itoa(port)
-		cmd := exec.Command("firewall-cmd", "--zone=public", "--add-port="+s+"/tcp", "--permanent")
+		cmd := exec.Command(
+			"firewall-cmd",
+			"--zone=public",
+			"--add-port="+s+"/"+protocol,
+			"--permanent",
+		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			f.logger.Error(err.Error())
@@ -80,7 +90,33 @@ func (f *Firewalld) PortOpen(port int) error {
 	return nil
 }
 
-func (f *Firewalld) PortClose(port int) error {
+func (f *Firewalld) PortClose(port int, protocol string) error {
+	// #nosec G204 - handle is extracted from nftables output and validated
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			f.logger.Error("invalid protocol")
+			return fmt.Errorf("invalid protocol")
+		}
+		s := strconv.Itoa(port)
+		cmd := exec.Command(
+			"firewall-cmd",
+			"--zone=public",
+			"--remove-port="+s+"/"+protocol,
+			"--permanent",
+		)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			f.logger.Error(err.Error())
+			return err
+		}
+		f.logger.Info("Remove port " + s + " " + string(output))
+		output, err = exec.Command("firewall-cmd", "--reload").CombinedOutput()
+		if err != nil {
+			f.logger.Error(err.Error())
+			return err
+		}
+		f.logger.Info("Reload " + string(output))
+	}
 	return nil
 }
 

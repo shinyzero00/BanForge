@@ -2,6 +2,7 @@ package blocker
 
 import (
 	"os/exec"
+	"strconv"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
 )
@@ -102,11 +103,61 @@ func (f *Iptables) Unban(ip string) error {
 	return nil
 }
 
-func (f *Iptables) PortOpen(port int) error {
+func (f *Iptables) PortOpen(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			f.logger.Error("invalid protocol")
+			return nil
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command("iptables", "-A", "INPUT", "-p", protocol, "--dport", s, "-j", "ACCEPT")
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			f.logger.Error(err.Error())
+			return err
+		}
+		f.logger.Info("Add port " + s + " " + string(output))
+		// #nosec G204 - f.config is validated above via validateConfigPath()
+		cmd = exec.Command("iptables-save", "-f", f.config)
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			f.logger.Error("failed to save config",
+				"config_path", f.config,
+				"error", err.Error(),
+				"output", string(output))
+			return err
+		}
+	}
 	return nil
 }
 
-func (f *Iptables) PortClose(port int) error {
+func (f *Iptables) PortClose(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			f.logger.Error("invalid protocol")
+			return nil
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command("iptables", "-D", "INPUT", "-p", protocol, "--dport", s, "-j", "ACCEPT")
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			f.logger.Error(err.Error())
+			return err
+		}
+		f.logger.Info("Add port " + s + " " + string(output))
+		// #nosec G204 - f.config is validated above via validateConfigPath()
+		cmd = exec.Command("iptables-save", "-f", f.config)
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			f.logger.Error("failed to save config",
+				"config_path", f.config,
+				"error", err.Error(),
+				"output", string(output))
+			return err
+		}
+	}
 	return nil
 }
 

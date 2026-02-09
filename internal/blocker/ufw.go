@@ -3,6 +3,7 @@ package blocker
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 
 	"github.com/d3m0k1d/BanForge/internal/logger"
 )
@@ -56,11 +57,41 @@ func (u *Ufw) Unban(ip string) error {
 	return nil
 }
 
-func (u *Ufw) PortOpen(port int) error {
+func (u *Ufw) PortOpen(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			u.logger.Error("invalid protocol")
+			return fmt.Errorf("invalid protocol")
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command("ufw", "allow", s+"/"+protocol)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			u.logger.Error(err.Error())
+			return err
+		}
+		u.logger.Info("Add port " + s + " " + string(output))
+	}
 	return nil
 }
 
-func (u *Ufw) PortClose(port int) error {
+func (u *Ufw) PortClose(port int, protocol string) error {
+	if port >= 0 && port <= 65535 {
+		if protocol != "tcp" && protocol != "udp" {
+			u.logger.Error("invalid protocol")
+			return nil
+		}
+		s := strconv.Itoa(port)
+		// #nosec G204 - managed by system adminstartor
+		cmd := exec.Command("ufw", "deny", s+"/"+protocol)
+		output, err := cmd.CombinedOutput()
+		if err != nil {
+			u.logger.Error(err.Error())
+			return err
+		}
+		u.logger.Info("Add port " + s + " " + string(output))
+	}
 	return nil
 }
 
