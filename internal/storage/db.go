@@ -45,6 +45,7 @@ func initDB(dsn, sqlstr string) (err error) {
 			err = errors.Join(err, fmt.Errorf("failed to close %q: %w", dsn, closeErr))
 		}
 	}()
+	_, err = db.Exec(sqlstr)
 	if err != nil {
 		return fmt.Errorf("failed to create table: %w", err)
 	}
