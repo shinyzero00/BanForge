@@ -125,24 +125,24 @@ func EditRule(Name string, ServiceName string, Path string, Status string, Metho
 }
 
 func ParseDurationWithYears(s string) (time.Duration, error) {
-	if strings.HasSuffix(s, "y") {
-		years, err := strconv.Atoi(strings.TrimSuffix(s, "y"))
+	if ss, ok := strings.CutSuffix(s, "y"); ok {
+		years, err := strconv.Atoi(ss)
 		if err != nil {
 			return 0, err
 		}
 		return time.Duration(years) * 365 * 24 * time.Hour, nil
 	}
 
-	if strings.HasSuffix(s, "M") {
-		months, err := strconv.Atoi(strings.TrimSuffix(s, "M"))
+	if ss, ok := strings.CutSuffix(s, "M"); ok {
+		months, err := strconv.Atoi(ss)
 		if err != nil {
 			return 0, err
 		}
 		return time.Duration(months) * 30 * 24 * time.Hour, nil
 	}
 
-	if strings.HasSuffix(s, "d") {
-		days, err := strconv.Atoi(strings.TrimSuffix(s, "d"))
+	if ss, ok := strings.CutSuffix(s, "d"); ok {
+		days, err := strconv.Atoi(ss)
 		if err != nil {
 			return 0, err
 		}
