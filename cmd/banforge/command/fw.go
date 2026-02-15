@@ -43,7 +43,7 @@ var UnbanCmd = &cobra.Command{
 				return fmt.Errorf("IP can't be empty")
 			}
 			if net.ParseIP(ip) == nil {
-				return fmt.Errorf("Invalid IP")
+				return fmt.Errorf("invalid IP")
 			}
 			if err != nil {
 				return err
@@ -92,7 +92,7 @@ var BanCmd = &cobra.Command{
 				return fmt.Errorf("IP can't be empty")
 			}
 			if net.ParseIP(ip) == nil {
-				return fmt.Errorf("Invalid IP")
+				return fmt.Errorf("invalid IP")
 			}
 			if err != nil {
 				return err
