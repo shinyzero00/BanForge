@@ -106,7 +106,7 @@ var BanCmd = &cobra.Command{
 				return err
 			}
 			fmt.Println("IP blocked successfully!")
-			return err
+			return nil
 		}()
 		if err != nil {
 			fmt.Println(err)
