@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func WriteReq(db *Request_Writer, resultCh <-chan *LogEntry) {
+func WriteReq(db *RequestWriter, resultCh <-chan *LogEntry) {
 	db.logger.Info("Starting log writer")
 	const batchSize = 100
 	const flushInterval = 1 * time.Second
