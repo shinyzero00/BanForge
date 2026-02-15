@@ -61,8 +61,6 @@ func NewRule(
 		err = errors.Join(err, file.Close())
 	}()
 	cfg := Rules{Rules: r}
-
-	// what if it fails?
 	err = toml.NewEncoder(file).Encode(cfg)
 	if err != nil {
 		return err
