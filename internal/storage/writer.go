@@ -25,11 +25,15 @@ func WriteReq(db *RequestWriter, resultCh <-chan *LogEntry) {
 
 			tx, err := db.db.Begin()
 			if err != nil {
-				return fmt.Errorf("Failed to begin transaction: %w", err)
+				return fmt.Errorf("failed to begin transaction: %w", err)
 			}
 			defer func() {
-				if rollbackErr := tx.Rollback(); rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
-					err = errors.Join(err, fmt.Errorf("Failed to rollback transaction: %w", rollbackErr))
+				if rollbackErr := tx.Rollback(); rollbackErr != nil &&
+					!errors.Is(rollbackErr, sql.ErrTxDone) {
+					err = errors.Join(
+						err,
+						fmt.Errorf("failed to rollback transaction: %w", rollbackErr),
+					)
 				}
 			}()
 
@@ -37,12 +41,12 @@ func WriteReq(db *RequestWriter, resultCh <-chan *LogEntry) {
 				"INSERT INTO requests (service, ip, path, method, status, created_at) VALUES (?, ?, ?, ?, ?, ?)",
 			)
 			if err != nil {
-				err = fmt.Errorf("Failed to prepare statement: %w", err)
+				err = fmt.Errorf("failed to prepare statement: %w", err)
 				return err
 			}
 			defer func() {
 				if closeErr := stmt.Close(); closeErr != nil {
-					err = errors.Join(err, fmt.Errorf("Failed to close statement: %w", closeErr))
+					err = errors.Join(err, fmt.Errorf("failed to close statement: %w", closeErr))
 				}
 			}()
 
@@ -56,12 +60,12 @@ func WriteReq(db *RequestWriter, resultCh <-chan *LogEntry) {
 					time.Now().Format(time.RFC3339),
 				)
 				if err != nil {
-					db.logger.Error(fmt.Errorf("Failed to insert entry: %w", err).Error())
+					db.logger.Error(fmt.Errorf("failed to insert entry: %w", err).Error())
 				}
 			}
 
 			if err := tx.Commit(); err != nil {
-				return fmt.Errorf("Failed to commit transaction: %w", err)
+				return fmt.Errorf("failed to commit transaction: %w", err)
 			}
 
 			batch = batch[:0]
